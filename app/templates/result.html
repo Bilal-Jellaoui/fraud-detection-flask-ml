@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  {#variables Jinja2 {{ }} #}
+  <title>Résultat #{{ pred.id }} — FraudDétect ML</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f4f8; color: #1a202c; min-height: 100vh;
+    }
+    nav {
+      background: #1a365d; padding: 0 2rem;
+      display: flex; align-items: center;
+      justify-content: space-between; height: 60px;
+    }
+    nav .brand { color: #fff; font-size: 1.1rem; font-weight: 700; }
+    nav .links  { display: flex; gap: 1.5rem; }
+    nav .links a {
+      color: #bee3f8; text-decoration: none; font-size: 0.9rem;
+      padding: 6px 12px; border-radius: 6px; transition: background 0.2s;
+    }
+    nav .links a:hover { background: rgba(255,255,255,0.15); }
+
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    /* Verdict */
+    .verdict {
+      border-radius: 16px; padding: 2.5rem;
+      text-align: center; margin-bottom: 1.5rem;
+    }
+    .verdict.fraud { background: #fff5f5; border: 2px solid #fc8181; }
+    .verdict.legit { background: #f0fff4; border: 2px solid #68d391; }
+    .verdict-icon  { font-size: 4rem; margin-bottom: 0.5rem; }
+    .verdict-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .verdict.fraud .verdict-title { color: #c53030; }
+    .verdict.legit .verdict-title { color: #276749; }
+    .verdict-sub { font-size: 0.95rem; color: #4a5568; }
+
+    /* Jauge */
+    .gauge-card {
+      background: #fff; border-radius: 12px;
+      padding: 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      text-align: center;
+    }
+    .gauge-label {
+      font-size: 0.82rem; font-weight: 700; color: #718096;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;
+    }
+    .gauge-value { font-size: 3rem; font-weight: 800; margin-bottom: 0.75rem; }
+    .gauge-track {
+      background: #e2e8f0; border-radius: 999px;
+      height: 16px; overflow: hidden; max-width: 500px; margin: 0 auto;
+    }
+    .gauge-fill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+
+    /* Métriques */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .metric-card {
+      background: #fff; border-radius: 10px;
+      padding: 1.25rem; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .metric-val { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+    .metric-lbl { font-size: 0.78rem; color: #718096; font-weight: 700;
+                  text-transform: uppercase; }
+    .risk-LOW    { color: #276749; }
+    .risk-MEDIUM { color: #c05621; }
+    .risk-HIGH   { color: #c53030; }
+
+    /* Features */
+    .card {
+      background: #fff; border-radius: 12px;
+      padding: 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700; color: #2d3748;
+      border-left: 4px solid #3182ce;
+      padding-left: 0.75rem; margin-bottom: 1rem;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 0.5rem;
+    }
+    .feat-item {
+      background: #f7fafc; border-radius: 6px;
+      padding: 6px 10px; font-size: 0.82rem;
+    }
+    .feat-item .fk { color: #718096; font-weight: 700; }
+    .feat-item .fv { color: #2d3748; font-weight: 500; }
+
+    /* Actions */
+    .actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-size: 0.92rem; font-weight: 700; cursor: pointer;
+      text-decoration: none; display: inline-block;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary   { background: #3182ce; color: #fff; }
+    .btn-secondary { background: #edf2f7; color: #4a5568; }
+
+    footer { text-align: center; color: #a0aec0; font-size: 0.8rem; padding: 2rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">🛡 FraudDétect ML</div>
+  {# url_for() pour générer les URLs #}
+  <div class="links">
+    <a href="{{ url_for('main.index') }}">Analyse</a>
+    <a href="{{ url_for('main.history') }}">Historique (API)</a>
+    <a href="{{ url_for('main.stats') }}">Statistiques (API)</a>
+    <a href="{{ url_for('main.admin') }}">Admin (API)</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  {# {% if %} / {% else %} / {% endif %} #}
+  <div class="verdict {{ 'fraud' if pred.is_fraud else 'legit' }}">
+    <div class="verdict-icon">
+      {{ '⚠️' if pred.is_fraud else '✅' }}
+    </div>
+    <div class="verdict-title">
+      {% if pred.is_fraud %}
+        TRANSACTION FRAUDULEUSE
+      {% else %}
+        TRANSACTION LÉGITIME
+      {% endif %}
+    </div>
+    {# filtres Jinja2 — pas de strftime direct, on utilise isoformat #}
+    <div class="verdict-sub">
+      Prédiction #{{ pred.id }} —
+      {{ pred.timestamp.strftime('%d/%m/%Y à %H:%M:%S') }}
+    </div>
+  </div>
+
+  <!-- Jauge probabilité -->
+  <div class="gauge-card">
+    <div class="gauge-label">Probabilité de fraude</div>
+    <div class="gauge-value"
+         style="color: {{ '#c53030' if pred.fraud_probability > 0.3 else '#276749' }}">
+      {# filtre {{ val | round(2) }} #}
+      {{ "%.2f" | format(pred.fraud_probability * 100) }}%
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-fill" id="gauge-fill"
+           data-prob="{{ pred.fraud_probability }}"
+           style="width: 0%;
+                  background: {{ '#e53e3e' if pred.fraud_probability > 0.7
+                                  else '#ed8936' if pred.fraud_probability > 0.3
+                                  else '#38a169' }};">
+      </div>
+    </div>
+  </div>
+
+  <!-- Métriques rapides -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-val risk-{{ pred.risk_level }}">
+        {{ pred.risk_level }}
+      </div>
+      <div class="metric-lbl">Niveau de risque</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:#2b6cb0">
+        {{ "%.2f" | format(pred.amount) }}€
+      </div>
+      <div class="metric-lbl">Montant</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:#553c9a">
+        {{ pred.time_seconds | int }}s
+      </div>
+      <div class="metric-lbl">Timestamp</div>
+    </div>
+  </div>
+
+  <!-- Features saisies -->
+  {% if input_features %}
+  <div class="card">
+    <div class="card-title">Features de la transaction analysée</div>
+    {# {% for key, val in dict.items() %} #}
+    <div class="features-grid">
+      {% for key, val in input_features.items() %}
+      <div class="feat-item">
+        <div class="fk">{{ key }}</div>
+        <div class="fv">{{ "%.4f" | format(val | float) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="actions">
+    {# url_for() #}
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+      Nouvelle analyse
+    </a>
+    <a href="{{ url_for('main.history') }}" class="btn btn-secondary">
+      Voir l'historique (JSON)
+    </a>
+    <a href="{{ url_for('main.stats') }}" class="btn btn-secondary">
+      Statistiques (JSON)
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  Bilal Jellaoui — Projet Python · Déetection de Fraude Bancaire ML
+</footer>
+
+<script>
+  // Animation de la jauge au chargement
+  window.addEventListener("load", () => {
+    const fill = document.getElementById("gauge-fill");
+    const prob = parseFloat(fill.dataset.prob);
+    setTimeout(() => {
+      fill.style.width = (prob * 100) + "%";
+    }, 150);
+  });
+</script>
+</body>
+</html>

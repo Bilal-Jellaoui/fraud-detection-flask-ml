@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FraudDétect ML — Détection de Fraude Bancaire </title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background:rgb(245, 247, 250); color:rgb(30, 41, 59); min-height: 100vh;
+    }
+    nav {
+      background:rgb(15, 23, 42); padding: 0 2rem;
+      display: flex; align-items: center;
+      justify-content: space-between; height: 60px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    nav .brand { color: #fff; font-size: 1.1rem; font-weight: 700; }
+    nav .links { display: flex; gap: 1.5rem; }
+    nav .links a {
+      color:rgb(203, 213, 225); text-decoration: none;
+      font-size: 0.9rem; padding: 6px 12px;
+      border-radius: 6px; transition: background 0.2s;
+    }
+    nav .links a:hover { background: rgb(6, 182, 212); color: #fff; }
+
+    .status-bar {
+      background:rgb(226, 232, 240); color:rgb(51, 65, 85);
+      text-align: center; font-size: 0.82rem; padding: 6px;
+    }
+    .ok  { color: #16a34a; font-weight: 700; }
+    .err { color: #dc2626; font-weight: 700; }
+
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1.5rem; }
+    .page-title { font-size: 1.6rem; font-weight: 700;
+                  color:rgb(15, 23, 24); margin-bottom: 0.3rem; }
+    .page-sub   { color:rgb(100, 116, 139); font-size: 0.95rem; margin-bottom: 2rem; }
+
+    .card {
+      background: linear-gradient(135deg,rgb(15, 23, 42), rgb(30, 41, 59)); border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      padding: 1.75rem; margin-bottom: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700; color:rgb(34, 211, 238);
+      border-left: 4px solidrgb(6, 182, 212);
+      padding-left: 0.75rem; margin-bottom: 1.25rem;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-group label {
+      font-size: 0.78rem; font-weight: 700; color:rgb(203, 213, 225);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .field-group input,
+    .field-group select {
+      border: 1.5px solidrgb(71, 85, 105); border-radius: 7px;
+      padding: 8px 10px; font-size: 0.9rem; color:rgb(241, 245, 249);
+      background:rgb(255,255,255,0.08);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-group input::placeholder {
+      color: rgb(148, 163, 184);
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+      outline: none; border-color:rgb(6, 182, 212);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18);
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* Toggle PCA — contrôle l'affichage */
+    .pca-toggle {
+      display: flex; align-items: center;
+      gap: 10px; cursor: pointer; user-select: none;
+      margin-bottom: 1rem;
+    }
+    .pca-toggle input[type="checkbox"] { display: none; }
+    .toggle-sw {
+      width: 40px; height: 22px; background:rgb(203, 213, 225);
+      border-radius: 11px; position: relative; transition: background 0.2s;
+    }
+    .pca-toggle input:checked + .toggle-sw { background:rgb(6, 182, 212); }
+    .toggle-sw::after {
+      content: ""; position: absolute;
+      width: 16px; height: 16px; background: #fff;
+      border-radius: 50%; top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .pca-toggle input:checked + .toggle-sw::after { transform: translateX(18px); }
+
+    #pca-section { display: none; }
+    #pca-section.visible { display: block; }
+
+    .btn-row { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 24px; border: none; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary  { background:rgb(6, 182, 212); color: #fff; }
+    .btn-demo     { background:rgb(249, 115, 22); color:rgb(255, 255, 255); }
+    .btn-reset    { background:rgb(226, 232, 240); color: rgb(51, 65, 85); }
+
+    .info-box {
+      background:rgb(6, 182, 212, 0.08); border: 1px solidrgb(6, 182, 212, 0.35);
+      border-radius: 8px; padding: 1rem;
+      font-size: 0.87rem; color:rgb(53, 109, 138); margin-bottom: 1.5rem;
+    }
+    footer {
+      text-align: center; color:rgb(92, 117, 151);
+      font-size: 0.8rem; padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">JB FraudDétect ML</div>
+  <div class="links">
+    <a href="{{ url_for('main.index') }}">Analyse</a>
+    <a href="{{ url_for('main.history') }}">Historique (API)</a>
+    <a href="{{ url_for('main.stats') }}">Statistiques (API)</a>
+    <a href="{{ url_for('main.admin') }}">Admin (API)</a>
+  </div>
+</nav>
+
+{# {% if %} / {% else %} / {% endif %} #}
+<div class="status-bar">
+  Modèle :
+  {% if model_loaded %}
+    <span class="ok">✓ {{ model_name }} — chargé et opérationnel</span>
+  {% else %}
+    <span class="err">✗ Modèle absent — lancez : python ml/train.py</span>
+  {% endif %}
+</div>
+
+<div class="container">
+  <div class="page-title">Analyse de Transaction Bancaire</div>
+  <div class="page-sub">
+    Saisissez les caractéristiques d'une transaction pour obtenir
+    une prédiction de risque de fraude en temps réel.
+  </div>
+
+  <div class="info-box">
+    Dataset <strong>Credit Card Fraud Detection</strong> — Kaggle (284 807 transactions).
+    Les features <strong>V1–V28</strong> sont des composantes PCA anonymisées.
+    <strong>Amount</strong> et <strong>Time</strong> sont les seules features
+    directement interprétables.
+  </div>
+
+  {# <form method="POST"> vers l'endpoint /predict #}
+  <form action="{{ url_for('main.predict') }}" method="POST">
+
+    <!-- Champs principaux -->
+    <div class="card">
+      <div class="card-title">Informations de la transaction</div>
+      <div class="fields-grid">
+
+        <div class="field-group">
+          <label for="Time">Time (secondes)</label>
+          <input type="number" id="Time" name="Time"
+                 step="any" value="0" required
+                 placeholder="ex: 406"/>
+        </div>
+
+        <div class="field-group">
+          <label for="Amount">Montant (€)</label>
+          <input type="number" id="Amount" name="Amount"
+                 step="0.01" min="0" required
+                 placeholder="ex: 149.62"/>
+        </div>
+
+        <div class="field-group">
+          <label for="true_label">Vrai label (optionnel)</label>
+          <select id="true_label" name="true_label">
+            <option value="">— Non renseigné —</option>
+            <option value="0">0 — Légitime</option>
+            <option value="1">1 — Fraude confirmée</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Features PCA V1–V28 -->
+    <div class="card">
+      <label class="pca-toggle">
+        <input type="checkbox" id="pca-cb"
+               onchange="document.getElementById('pca-section')
+                         .classList.toggle('visible', this.checked)"/>
+        <span class="toggle-sw"></span>
+        <span style="font-size:0.9rem; color:#4a5568; font-weight:600;">
+          Saisir les features PCA (V1–V28)
+        </span>
+      </label>
+
+      <div id="pca-section">
+        {# {% for %} / {% endfor %} #}
+        <div class="fields-grid">
+          {% for v in v_features %}
+          <div class="field-group">
+            <label for="{{ v }}">{{ v }}</label>
+            <input type="number" id="{{ v }}" name="{{ v }}"
+                   step="any" value="0" placeholder="0.0"/>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-row">
+      <button type="submit" class="btn btn-primary">
+        Analyser la transaction
+      </button>
+      <button type="button" class="btn btn-demo"
+              onclick="loadExample('fraud')">
+        Exemple frauduleux
+      </button>
+      <button type="button" class="btn btn-demo"
+              onclick="loadExample('legit')">
+        Exemple légitime
+      </button>
+      <button type="reset" class="btn btn-reset">
+        Réinitialiser
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<footer>
+  Bilal Jellaoui — Projet Python · FraudDéetcect ML ·
+  Framework: Flask 3.x(Python) 
+</footer>
+
+<script>
+  const EXAMPLES = {
+    fraud: {
+      Time:406, Amount:149.62,
+      V1:-1.3598,V2:0.2662,V3:2.5363,V4:1.3782,
+      V5:-0.3383,V6:0.4624,V7:0.2396,V8:0.0987,
+      V9:0.3638,V10:0.0908,V11:-0.5516,V12:-8.0,
+      V13:-0.9914,V14:-12.0,V15:1.4682,V16:-0.4704,
+      V17:-10.0,V18:0.0258,V19:0.4040,V20:0.2514,
+      V21:-0.0183,V22:0.2778,V23:-0.1105,V24:0.0669,
+      V25:0.1285,V26:-0.1891,V27:0.1336,V28:-0.0211,
+      true_label:"1"
+    },
+    legit: {
+      Time:52000, Amount:25.00,
+      V1:1.1919,V2:0.2662,V3:0.1665,V4:0.4482,
+      V5:-0.0600,V6:-0.0824,V7:-0.0788,V8:0.0851,
+      V9:-0.2554,V10:-0.1670,V11:1.6127,V12:1.0652,
+      V13:0.4891,V14:-0.1438,V15:0.6356,V16:0.4639,
+      V17:-0.1148,V18:-0.1834,V19:-0.1458,V20:-0.0691,
+      V21:-0.2258,V22:-0.6387,V23:0.1013,V24:-0.3398,
+      V25:0.1672,V26:0.1259,V27:-0.0090,V28:0.0147,
+      true_label:"0"
+    }
+  };
+
+  function loadExample(type) {
+    const ex = EXAMPLES[type];
+    // Remplir chaque champ du formulaire
+    Object.entries(ex).forEach(([key, val]) => {
+      const el = document.getElementById(key);
+      if (el) el.value = val;
+    });
+    // Afficher la section PCA automatiquement
+    document.getElementById("pca-cb").checked = true;
+    document.getElementById("pca-section").classList.add("visible");
+  }
+</script>
+</body>
+</html>
