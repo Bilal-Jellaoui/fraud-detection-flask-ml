@@ -177,7 +177,7 @@ Machine Learning sur données déséquilibrées (SMOTE, class weights) · Optimi
 
 ## 👤 Auteur
 
-**Bilal Jellaoui** · [GitHub](https://github.com/Bilal-Jellaoui) · [LinkedIn](https://www.linkedin.com/in/TON-PROFIL)
+**Bilal Jellaoui** · [GitHub](https://github.com/Bilal-Jellaoui) · [LinkedIn](https://www.linkedin.com/in/bilal-jellaoui-381594170)
 
 Master M1 Big Data, Intelligence Artificielle et Applications Avancées — Université Ibn Tofaïl, Faculté des Sciences de Kénitra · 2025–2026
 Module : Python Avancé · Encadrant : Pr. Hatim Derrouz
