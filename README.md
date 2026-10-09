@@ -231,3 +231,4 @@ fraud-detection-flask-ml/
 
 Master M1 Big Data, Intelligence Artificielle et Applications Avancées — Université Ibn Tofaïl, Faculté des Sciences de Kénitra · 2025–2026
 Module : Python Avancé · Encadrant : Pr. Hatim Derrouz · [LinkedIn](https://www.linkedin.com/in/hatimderrouz/?isSelfProfile=false)
+
