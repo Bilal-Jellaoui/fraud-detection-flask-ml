@@ -1,71 +1,108 @@
-# 🛡️ Détection de fraude bancaire — Application web Flask & Machine Learning
+<div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask&logoColor=white)
-![XGBoost](https://img.shields.io/badge/XGBoost-2.0-EB5B27)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.5-F7931E?logo=scikitlearn&logoColor=white)
-![ROC-AUC](https://img.shields.io/badge/ROC--AUC-0.982-success)
-![F1](https://img.shields.io/badge/F1--score-0.87-success)
+# 🛡️ Détection de Fraude Bancaire
 
-> **EN —** Credit-card fraud detection web app (Flask + XGBoost). Four models compared on a highly imbalanced dataset (0.172 % fraud) using SMOTE and cross-validated hyperparameter search; best model **XGBoost: ROC-AUC 0.982, F1 0.87**, served through a REST API with risk scoring (LOW / MEDIUM / HIGH) and SQLite prediction logging. Master's project (Advanced Python), Ibn Tofaïl University.
+### Application web Flask & Machine Learning
 
-Application web de **détection de fraude par carte bancaire** : un agent saisit les caractéristiques d'une transaction et obtient en temps réel une **probabilité de fraude** et un **niveau de risque**. Projet du module *Python Avancé* — Master M1 Big Data, IA & Applications Avancées (Université Ibn Tofaïl, Kénitra).
+*Prédiction en temps réel du risque de fraude par carte bancaire, sur des données extrêmement déséquilibrées.*
 
-📄 **Rapport complet** : [`report/`](report/) · 🎬 **Vidéo de démonstration** : [`docs/demo/`](docs/demo/)
+<br>
+
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-2.0-EB5B27?style=for-the-badge)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.5-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+
+![ROC-AUC](https://img.shields.io/badge/ROC--AUC-0.982-2ea44f?style=flat-square)
+![F1](https://img.shields.io/badge/F1--score-0.87-2ea44f?style=flat-square)
+![Precision](https://img.shields.io/badge/Precision-0.88-2ea44f?style=flat-square)
+![Recall](https://img.shields.io/badge/Recall-0.86-2ea44f?style=flat-square)
+![Status](https://img.shields.io/badge/Statut-Termin%C3%A9-0A66C2?style=flat-square)
+
+<br>
+
+[📄 Rapport](report/) · [🎬 Démo vidéo](docs/demo/) · [📊 Résultats](#-résultats) · [🚀 Installation](#-installation-et-lancement) · [🔌 API](#-api-rest)
+
+</div>
 
 ---
 
-## 🎯 Objectifs
+> **🇬🇧 EN —** Credit-card fraud detection web app (Flask + XGBoost). Four models compared on a highly imbalanced dataset (0.173 % fraud) using SMOTE and cross-validated hyperparameter search. Best model **XGBoost: ROC-AUC 0.982, F1 0.87**, served through a REST API with risk scoring (LOW / MEDIUM / HIGH) and SQLite prediction logging. Master's project (Advanced Python), Ibn Tofaïl University.
 
-- Détecter automatiquement les transactions frauduleuses malgré un **déséquilibre extrême** des classes (492 fraudes sur 284 807 transactions).
-- **Comparer** des modèles supervisés et non supervisé avec les bonnes métriques (précision, rappel, F1, ROC-AUC, matrice de confusion — l'accuracy seule serait trompeuse).
-- **Déployer** le meilleur modèle dans une application Flask avec API REST, historique des prédictions et tableau de bord d'analyse des erreurs.
+## ✨ Points clés
+
+| | |
+|---|---|
+| 🎯 **Problème** | 492 fraudes sur 284 807 transactions (**0,173 %**) : l'accuracy seule est trompeuse |
+| 🧪 **Approche** | SMOTE + 4 modèles comparés + `RandomizedSearchCV` (CV stratifiée à 5 plis) |
+| 🏆 **Meilleur modèle** | **XGBoost** : ROC-AUC **0,982**, F1 **0,87**, 84 fraudes détectées sur 98 |
+| 🌐 **Déploiement** | Application Flask, API REST, historique SQLite, dashboard administrateur |
 
 ## 📸 Aperçu de l'application
 
-| Formulaire de saisie | Résultat d'une prédiction | Dashboard admin |
+| 📝 Formulaire de saisie | ✅ Résultat d'une prédiction | 🛠️ Dashboard admin |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/accueil.png" width="260"> | <img src="docs/screenshots/resultat.png" width="260"> | <img src="docs/screenshots/admin.png" width="260"> |
+| <img src="docs/screenshots/accueil.png" width="280"> | <img src="docs/screenshots/resultat.png" width="280"> | <img src="docs/screenshots/admin.png" width="280"> |
 
 🎬 [Voir la vidéo de démonstration](docs/demo/video_app.mp4)
 
 ## 🗂️ Dataset
 
-[**Credit Card Fraud Detection** (Kaggle, ULB)](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) — transactions de cartes européennes sur 2 jours.
+[**Credit Card Fraud Detection**](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) (Kaggle, ULB) : transactions de cartes européennes sur 2 jours.
 
 | Caractéristique | Valeur |
 |---|---|
-| Transactions | 284 807 |
-| Fraudes | 492 (**0,172 %**) |
-| Variables | `Time`, `Amount`, `V1`–`V28` (composantes PCA anonymisées), `Class` |
-| Découpage | 80 % / 20 % stratifié — 227 845 en entraînement, 56 962 en test |
+| 💳 Transactions | 284 807 |
+| 🚨 Fraudes | 492 (**0,173 %**) |
+| 🔢 Variables | `Time`, `Amount`, `V1`–`V28` (composantes PCA anonymisées), `Class` |
+| ✂️ Découpage | 80 % / 20 % stratifié : 227 845 en entraînement, 56 962 en test (98 fraudes) |
 
-> Le fichier `creditcard.csv` (≈ 150 Mo) n'est pas inclus dans le dépôt : voir [Installation](#-installation-et-lancement).
+> 📦 `creditcard.csv` (≈ 150 Mo) n'est pas inclus : voir [Installation](#-installation-et-lancement).
+
+<p align="center">
+  <img src="data/class_distribution.png" width="430" alt="Distribution des classes">
+  <img src="data/feature_discrimination.png" width="430" alt="Variables discriminantes">
+</p>
+
+Variables les plus discriminantes : `V14`, `V4`, `V11`, `V12`.
 
 ## 🧠 Méthodologie
 
-**1. Analyse exploratoire** (`notebooks/eda.ipynb`) : distribution des classes, des montants et du temps, histogrammes des 28 composantes, corrélations avec la variable cible. Variables les plus discriminantes : `V14`, `V4`, `V11`, `V12`.
+```mermaid
+flowchart LR
+    A[📥 Données Kaggle] --> B[🔍 Analyse exploratoire]
+    B --> C[⚙️ Split stratifié 80/20 + StandardScaler]
+    C --> D[⚖️ SMOTE sur l'entraînement uniquement]
+    D --> E[🤖 4 modèles + RandomizedSearchCV]
+    E --> F[📏 Évaluation sur le test]
+    F --> G[🏆 XGBoost retenu]
+    G --> H[🌐 API Flask + SQLite]
+```
 
-**2. Prétraitement** (`ml/preprocess.py`) : séparation stratifiée, normalisation de `Amount` et `Time` (`StandardScaler`), puis **SMOTE appliqué uniquement sur l'entraînement** (ratio fraudes/légitimes de 10 %) pour éviter toute fuite de données vers le test.
-
-**3. Modélisation** (`ml/train.py`) : 4 modèles, optimisés par `RandomizedSearchCV` avec validation croisée stratifiée à 5 plis, en maximisant le **F1-score**.
+| Étape | Détail |
+|---|---|
+| **Prétraitement** (`ml/preprocess.py`) | Séparation stratifiée, `StandardScaler` sur `Amount` et `Time` |
+| **Rééquilibrage** | **SMOTE** (ratio 0,1, k = 5) appliqué **uniquement au train** pour éviter toute fuite vers le test |
+| **Optimisation** (`ml/train.py`) | `RandomizedSearchCV`, 5 plis stratifiés, score F1 |
+| **Déploiement** (`app/`) | *Application Factory* + *Blueprint*, modèle chargé une seule fois (`FraudDetector`) |
 
 | Modèle | Type | Hyperparamètres optimisés |
 |---|---|---|
 | Logistic Regression | Supervisé | `C`, `penalty` (`class_weight='balanced'`) |
 | Random Forest | Supervisé | `n_estimators`, `max_depth`, `min_samples` |
-| **XGBoost** | Supervisé | `learning_rate`, `max_depth`, `subsample`, `scale_pos_weight` |
-| Isolation Forest | Non supervisé | Détection d'anomalies entraînée sur les transactions légitimes |
-
-**4. Déploiement** (`app/`) : pattern *Application Factory* + *Blueprint*, modèle chargé une seule fois au démarrage (`FraudDetector`), prédictions journalisées en SQLite via SQLAlchemy.
+| **XGBoost** ⭐ | Supervisé | `learning_rate`, `max_depth`, `subsample`, `scale_pos_weight` |
+| Isolation Forest | Non supervisé | Détection d'anomalies |
 
 ## 📊 Résultats
 
+Évaluation sur 56 962 transactions de test (seuil 0,5).
+
 | Modèle | Accuracy | Precision | Recall | F1-score | ROC-AUC |
 |---|---:|---:|---:|---:|---:|
-| **XGBoost ★** | **0.9996** | **0.8842** | 0.8571 | **0.8705** | **0.9820** |
-| Random Forest | 0.9995 | 0.8710 | 0.8265 | 0.8482 | 0.9689 |
-| Logistic Regression | 0.9761 | 0.0622 | **0.9184** | 0.1166 | 0.9726 |
+| 🥇 **XGBoost** | **0.9996** | **0.8842** | 0.8571 | **0.8705** | **0.9820** |
+| 🥈 Random Forest | 0.9995 | 0.8710 | 0.8265 | 0.8482 | 0.9689 |
+| 🥉 Logistic Regression | 0.9761 | 0.0622 | **0.9184** | 0.1166 | 0.9726 |
 | Isolation Forest | 0.9975 | 0.2152 | 0.1735 | 0.1921 | 0.5862 |
 
 <p align="center">
@@ -74,14 +111,10 @@ Application web de **détection de fraude par carte bancaire** : un agent saisit
 </p>
 
 **Lecture des résultats**
-- **XGBoost** détecte **84 fraudes sur 98** (14 manquées) et ne génère que **11 faux positifs sur 56 864** transactions légitimes : le meilleur compromis entre fraudes détectées et clients légitimes bloqués.
-- La **régression logistique** a le meilleur rappel (90 fraudes sur 98) mais **1 356 faux positifs** : inutilisable en production, car elle bloquerait massivement des clients légitimes. Cela illustre pourquoi l'accuracy (97,6 %) est une métrique trompeuse ici.
-- **Isolation Forest** (non supervisé) reste proche du hasard (AUC 0,59) sur ces variables déjà transformées par PCA.
 
-<p align="center">
-  <img src="data/class_distribution.png" width="430" alt="Distribution des classes">
-  <img src="data/feature_discrimination.png" width="430" alt="Variables discriminantes">
-</p>
+- ✅ **XGBoost** détecte **84 fraudes sur 98** (14 manquées) pour seulement **11 faux positifs** sur 56 864 transactions légitimes.
+- ⚠️ La **régression logistique** a le meilleur rappel (90/98) mais **1 356 faux positifs** : inutilisable en production. Son accuracy de 97,6 % illustre le piège de cette métrique.
+- 📉 **Isolation Forest** reste proche du hasard (AUC 0,59) sur des variables déjà transformées par PCA.
 
 ## 🔌 API REST
 
@@ -94,7 +127,10 @@ Application web de **détection de fraude par carte bancaire** : un agent saisit
 | `GET` | `/history` | 50 dernières prédictions |
 | `GET` | `/admin` | Dashboard faux positifs / faux négatifs |
 
-**Exemple**
+**Niveaux de risque** : 🟢 `LOW` · 🟠 `MEDIUM` · 🔴 `HIGH`
+
+<details>
+<summary><b>💻 Exemple d'appel</b></summary>
 
 ```bash
 curl -X POST http://localhost:5000/predict \
@@ -112,9 +148,11 @@ curl -X POST http://localhost:5000/predict \
 }
 ```
 
+</details>
+
 ## 🚀 Installation et lancement
 
-Le modèle entraîné est **inclus** (`app/models/`) : l'application se lance sans ré-entraîner.
+Le modèle entraîné est **inclus** (`app/models/`) : pas besoin de ré-entraîner.
 
 ```bash
 # 1. Cloner
@@ -129,15 +167,20 @@ venv\Scripts\activate            # Windows
 # 3. Dépendances
 pip install -r requirements.txt
 
-# 4. Lancer l'application
+# 4. Lancer
 python run.py                    # → http://localhost:5000
 ```
 
-**Ré-entraîner le modèle (optionnel)** : télécharger `creditcard.csv` depuis [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud), le placer dans `data/`, puis :
+<details>
+<summary><b>🔁 Ré-entraîner le modèle (optionnel)</b></summary>
+
+Télécharger `creditcard.csv` depuis [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud), le placer dans `data/`, puis :
 
 ```bash
 python ml/train.py               # ≈ 50 à 75 min selon la machine
 ```
+
+</details>
 
 ## 📁 Structure du dépôt
 
@@ -148,32 +191,39 @@ fraud-detection-flask-ml/
 │   ├── routes.py                # Endpoints REST + modèle SQLAlchemy
 │   ├── models/
 │   │   ├── fraud_detector.py    # Wrapper du modèle ML
-│   │   ├── saved_model.pkl      # Modèle XGBoost entraîné
+│   │   ├── saved_model.pkl      # XGBoost entraîné
 │   │   ├── scaler.pkl           # StandardScaler (Amount, Time)
 │   │   └── model_meta.json      # Métriques et métadonnées
 │   └── templates/               # index.html, result.html
 ├── ml/
 │   ├── preprocess.py            # Chargement, split, scaling, SMOTE
-│   ├── train.py                 # Recherche d'hyperparamètres, sauvegarde
+│   ├── train.py                 # Recherche d'hyperparamètres
 │   └── evaluate.py              # Métriques, ROC/PR, matrices de confusion
 ├── notebooks/eda.ipynb          # Analyse exploratoire
-├── data/                        # Figures d'analyse (creditcard.csv à ajouter)
-├── docs/                        # Captures d'écran et vidéo de démonstration
-├── report/                      # Rapport du projet (PDF)
+├── data/                        # Figures (creditcard.csv à ajouter)
+├── docs/                        # Captures d'écran et vidéo
+├── report/                      # Rapport du projet (PDF + sources LaTeX)
 ├── run.py
 └── requirements.txt
 ```
 
 ## ⚠️ Limites et pistes d'amélioration
 
-- **Concept drift** : les schémas de fraude évoluent, le modèle devrait être ré-entraîné périodiquement.
-- **Interprétabilité limitée** : les variables `V1`–`V28` sont anonymisées par PCA. Piste : explicabilité avec **SHAP**.
-- **Prototype** : pas d'authentification sur l'API (non prête pour la production).
-- **Pistes** : boucle de retour (`true_label`) pour le ré-entraînement continu, conteneurisation Docker, déploiement scalable.
+| Limite | Piste |
+|---|---|
+| 📉 **Concept drift** : les schémas de fraude évoluent | Ré-entraînement périodique |
+| 🔍 **Interprétabilité** limitée (`V1`–`V28` anonymisées par PCA) | Explicabilité **SHAP** |
+| 🎚️ **Seuil de décision** : évaluation à 0,5, application à un seuil plus bas | Choisir le seuil selon le coût d'une fraude manquée vs un client bloqué |
+| 🔐 **Prototype** : pas d'authentification sur l'API | Authentification, Docker, déploiement scalable |
 
 ## 🛠️ Compétences mises en œuvre
 
-Machine Learning sur données déséquilibrées (SMOTE, class weights) · Optimisation d'hyperparamètres (RandomizedSearchCV, validation croisée) · Évaluation (precision / recall / F1 / ROC-AUC / matrice de confusion) · Flask (API REST, Blueprint, Application Factory) · SQLAlchemy / SQLite · Analyse exploratoire (pandas, seaborn) · Rédaction technique
+![ML](https://img.shields.io/badge/Machine%20Learning-d%C3%A9s%C3%A9quilibr%C3%A9-0A66C2?style=flat-square)
+![SMOTE](https://img.shields.io/badge/SMOTE-class%20weights-8250DF?style=flat-square)
+![CV](https://img.shields.io/badge/Hyperparam%C3%A8tres-RandomizedSearchCV-F7931E?style=flat-square)
+![Eval](https://img.shields.io/badge/%C3%89valuation-ROC%20%7C%20PR%20%7C%20F1-2ea44f?style=flat-square)
+![Flask](https://img.shields.io/badge/Flask-API%20REST-000000?style=flat-square)
+![SQL](https://img.shields.io/badge/SQLAlchemy-SQLite-003B57?style=flat-square)
 
 ## 👤 Auteur
 
